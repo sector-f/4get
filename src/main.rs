@@ -7,15 +7,17 @@ extern crate threadpool;
 use hyper::client::Client;
 use regex::Regex;
 use scraper::{Html, Selector};
-use std::env::args;
+use std::env::args_os;
 use std::path::Path;
 use std::sync::mpsc::channel;
+use std::ffi::{OsStr, OsString};
 use std::fs::OpenOptions;
 use std::io::{stderr, Read, Write};
 use threadpool::ThreadPool;
 
-fn validate_arg(regex: &regex::Regex, arg: &str) -> bool {
-    match regex.is_match(arg) {
+fn validate_arg(regex: &regex::Regex, arg: &OsStr) -> bool {
+    let arg = arg.to_string_lossy().into_owned();
+    match regex.is_match(&arg) {
         true => true,
         false => {
             let _ = writeln!(stderr(), "Invalid URL: {}", arg);
@@ -74,13 +76,13 @@ fn download_file(url: &Path) {
 fn main() {
     let url_re = Regex::new(r"https{0,1}://boards.4chan.org/\S+/thread/\d+").unwrap();
 
-    let arguments: Vec<String> =
-        args().skip(1).into_iter()
+    let arguments: Vec<OsString> =
+        args_os().skip(1).into_iter()
         .filter(|arg| validate_arg(&url_re, &arg)).collect();
 
     let urls =
         arguments.into_iter()
-        .flat_map(|url| Result::ok(get_page(&url)))
+        .flat_map(|url| Result::ok(get_page(&url.to_string_lossy())))
         .flat_map(|s| parse_html(&s))
         .collect::<Vec<_>>();
 
