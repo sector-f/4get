@@ -56,6 +56,11 @@ fn parse_html(html: &str) -> Vec<String> {
 
 fn download_file(url: &Path) {
     if let Some(file_name) = url.file_name() {
+
+        if Path::new(&file_name).exists() {
+            return;
+        }
+
         let saved_file = OpenOptions::new()
             .create(true)
             .write(true)
