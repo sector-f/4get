@@ -3,14 +3,15 @@ extern crate scraper;
 extern crate num_cpus;
 extern crate regex;
 extern crate threadpool;
+extern crate clap;
 
+use clap::{App, Arg};
 use hyper::client::Client;
 use regex::Regex;
 use scraper::{Html, Selector};
-use std::env::args_os;
 use std::path::Path;
 use std::sync::mpsc::channel;
-use std::ffi::{OsStr, OsString};
+use std::ffi::OsStr;
 use std::fs::OpenOptions;
 use std::io::{stderr, Read, Write};
 use threadpool::ThreadPool;
@@ -69,10 +70,20 @@ fn download_file(url: &Path) {
 }
 
 fn main() {
-    let url_re = Regex::new(r"https?://boards.4chan.org/\S+/thread/\d+").unwrap();
+    let matches = App::new("4get")
+        .version(option_env!("CARGO_PKG_VERSION").unwrap_or("unknown version"))
+        .about("Downloads images from 4chan threads")
+        .arg(Arg::with_name("URL")
+            .help("4chan thread URL to download images from")
+            .index(1)
+            .multiple(true)
+            .required(true))
+        .get_matches();
 
-    let arguments: Vec<OsString> =
-        args_os().skip(1).into_iter()
+    let url_re = Regex::new(r"https?://boards.4chan.org/\S+/thread/\d+/\S+").unwrap();
+
+    let arguments: Vec<&OsStr> =
+        matches.values_of_os("URL").unwrap().into_iter()
         .filter(|arg| validate_arg(&url_re, &arg)).collect();
 
     let urls =
