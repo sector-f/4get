@@ -79,7 +79,7 @@ fn download_file(url: &Path) {
 }
 
 fn main() {
-    let url_re = Regex::new(r"https{0,1}://boards.4chan.org/\S+/thread/\d+").unwrap();
+    let url_re = Regex::new(r"https?://boards.4chan.org/\S+/thread/\d+").unwrap();
 
     let arguments: Vec<OsString> =
         args_os().skip(1).into_iter()
