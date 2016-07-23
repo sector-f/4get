@@ -38,20 +38,10 @@ fn parse_html(html: &str) -> Vec<String> {
     let document = Html::parse_document(&html);
     let thumbnail = Selector::parse("a.fileThumb").unwrap();
 
-    let mut vector = Vec::new();
-
-    for item in document.select(&thumbnail) {
-        if let Some(fragment) = item.value().attr("href") {
-            let url = format!("https:{}", fragment);
-            vector.push(url);
-        }
-    }
-
-    vector
-
-    // document.select(&thumbnail).into_iter()
-    //     .map(|post| format!("https:{}", post.value().attr("href").unwrap_or("")))
-    //     .collect::<Vec<_>>()
+    document.select(&thumbnail).into_iter()
+        .filter_map(|item| item.value().attr("href"))
+        .map(|url| format!("https:{}", url))
+        .collect()
 }
 
 fn download_file(url: &Path) {
